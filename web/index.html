@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulator Kebijakan Sampah - Kab. Sumedang</title>
+  <meta name="description" content="Simulator dampak kebijakan kantong plastik belanja di minimarket Kabupaten Sumedang - modul Command Center">
+  <link rel="icon" href="img/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="vendor/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+  <link rel="stylesheet" href="vendor/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<aside class="sidebar" id="sidebar">
+  <div class="brand"><img src="img/icon.svg" alt=""><div><b>Simulator Sampah</b><small>Command Center</small></div></div>
+  <nav>
+    <a href="#ringkasan" data-page="ringkasan"><i data-feather="home"></i><span>Ringkasan Skenario</span></a>
+    <a href="#peta" data-page="peta"><i data-feather="map"></i><span>Peta Wilayah</span></a>
+    <a href="#proyeksi" data-page="proyeksi"><i data-feather="trending-up"></i><span>Proyeksi 2026–2029</span></a>
+    <a href="#asumsi" data-page="asumsi"><i data-feather="sliders"></i><span>Asumsi &amp; Parameter</span></a>
+  </nav>
+  <div class="sidebar-foot small">Prototipe · nilai awal asumsi<br>FMIPA Unpad × SatuBumi × Pemkab Sumedang</div>
+</aside>
+<div class="backdrop" id="backdrop"></div>
+
+<div class="main">
+  <header class="topbar">
+    <button class="btn btn-link d-lg-none p-0" id="btn-menu" aria-label="Menu"><i data-feather="menu"></i></button>
+    <div>
+      <h1 id="page-title">Ringkasan Skenario</h1>
+      <div class="crumb">Lingkungan Hidup / <span id="page-crumb">Simulasi Kebijakan Sampah Plastik</span></div>
+    </div>
+    <div class="ml-auto d-none d-md-flex align-items-center">
+      <span class="user-chip">Kantong plastik belanja · minimarket</span>
+    </div>
+  </header>
+
+  <div class="content">
+    <!-- skenario: berlaku untuk semua halaman -->
+    <div class="filter-row">
+      <div class="btn-group btn-group-sm embed-tabs mr-2" id="embed-tabs" role="group" aria-label="Halaman">
+        <button class="btn btn-outline-secondary" data-page="ringkasan">Ringkasan</button>
+        <button class="btn btn-outline-secondary" data-page="peta">Peta</button>
+        <button class="btn btn-outline-secondary" data-page="proyeksi">Proyeksi</button>
+        <button class="btn btn-outline-secondary" data-page="asumsi">Asumsi</button>
+      </div>
+      <span class="lbl">Skenario kebijakan</span>
+      <div class="btn-group btn-group-sm flex-wrap sk-group" id="sk-group" role="group" aria-label="Skenario kebijakan"></div>
+      <button class="btn btn-sm btn-primary ml-auto btn-param" id="btn-param"><i data-feather="sliders" style="width:14px;height:14px"></i>Parameter</button>
+    </div>
+
+    <div class="sim-layout">
+      <div class="sim-main">
+
+        <!-- ===== RINGKASAN ===== -->
+        <section class="page" id="page-ringkasan">
+          <div class="row">
+            <div class="col-lg-4 mb-4"><div class="kpi kpi-purple">
+              <div class="kpi-label">Pengurangan bersih</div>
+              <div class="kpi-value"><span id="r-bersih">–</span><small> ton/tahun</small></div>
+              <div class="kpi-sub" id="r-bersih-sub"></div>
+            </div></div>
+            <div class="col-lg-4 mb-4"><div class="kpi kpi-pink">
+              <div class="kpi-label">Timbulan kantong saat ini</div>
+              <div class="kpi-value"><span id="r-timbulan">–</span><small> ton/tahun</small></div>
+              <div class="kpi-sub" id="r-timbulan-sub"></div>
+            </div></div>
+            <div class="col-lg-4 mb-4"><div class="kpi kpi-green">
+              <div class="kpi-label">Efektivitas bersih</div>
+              <div class="kpi-value"><span id="r-efektif">–</span><small> %</small></div>
+              <div class="kpi-sub">dari timbulan kantong plastik</div>
+            </div></div>
+          </div>
+          <div class="row">
+            <div class="col-md-3 col-6 mb-4"><div class="mini"><div class="mini-label">Pengurangan kotor</div><div class="mini-value"><span id="r-kotor">–</span><small> t/th</small></div><div class="mini-sub">sebelum efek samping</div></div></div>
+            <div class="col-md-3 col-6 mb-4"><div class="mini pink"><div class="mini-label">Kantong sampah pengganti</div><div class="mini-value"><span id="r-sub">–</span><small> t/th</small></div><div class="mini-sub">beralih membeli kantong sampah</div></div></div>
+            <div class="col-md-3 col-6 mb-4"><div class="mini warn"><div class="mini-label">Pindah ke warung/pasar</div><div class="mini-value"><span id="r-pindah">–</span><small> t/th</small></div><div class="mini-sub">belanja berpindah tempat</div></div></div>
+            <div class="col-md-3 col-6 mb-4"><div class="mini green"><div class="mini-label">Kantong dicegah</div><div class="mini-value"><span id="r-lembar">–</span><small> juta lembar</small></div><div class="mini-sub">per tahun</div></div></div>
+          </div>
+          <div class="card-x mb-4" style="height:auto">
+            <div class="card-x-head"><h5>Dari dampak kotor ke dampak bersih</h5><span class="sub" id="r-alur-sub"></span></div>
+            <div id="ch-alur"></div>
+            <div class="leg mt-1" id="leg-alur"></div>
+          </div>
+          <div class="row">
+            <div class="col-xl-8 mb-4"><div class="card-x">
+              <div class="card-x-head"><h5>Perbandingan skenario</h5><span class="sub">Pengurangan bersih, ton per tahun (tahun pertama)</span></div>
+              <div id="ch-skenario"></div>
+            </div></div>
+            <div class="col-xl-4 mb-4"><div class="info-box">
+              <h5>Kaitan dengan Masterplan</h5>
+              Hasil dibaca terhadap indikator <b>persentase pengurangan sampah residu</b> dan <b>Volume Sampah Terolah vs Residu</b>
+              pada pilar <i>Smart Environment</i> Masterplan Kawasan Pendidikan Jatinangor.<br><br>
+              Target: pengurangan residu <b>20% (2026)</b> hingga <b>50% (2029)</b>. Lihat
+              <a href="#proyeksi">Proyeksi 2026–2029</a> untuk perbandingan tahunan.
+            </div></div>
+          </div>
+        </section>
+
+        <!-- ===== PETA ===== -->
+        <section class="page" id="page-peta">
+          <div class="alert-x d-none" id="pt-alert">Skenario <b>Kondisi saat ini</b> tidak mengubah apa pun. Pilih skenario kebijakan di atas untuk melihat dampaknya.</div>
+          <div class="row">
+            <div class="col-md-3 col-6 mb-4"><div class="mini"><div class="mini-label">Kecamatan diterapkan</div><div class="mini-value"><span id="pt-jml">–</span><small> / 26</small></div></div></div>
+            <div class="col-md-3 col-6 mb-4"><div class="mini"><div class="mini-label">Gerai tercakup</div><div class="mini-value"><span id="pt-gerai">–</span><small id="pt-gerai-tot"></small></div></div></div>
+            <div class="col-md-3 col-6 mb-4"><div class="mini green"><div class="mini-label">Pengurangan bersih</div><div class="mini-value"><span id="pt-bersih">–</span><small> t/th</small></div></div></div>
+            <div class="col-md-3 col-6 mb-4"><div class="mini warn"><div class="mini-label">Limpahan ke wilayah lain</div><div class="mini-value"><span id="pt-limpah">–</span><small> t/th</small></div><div class="mini-sub">belanja pindah ke kecamatan tetangga</div></div></div>
+          </div>
+          <div class="map-layout mb-4">
+            <div class="card-x map-side">
+              <div class="detail-box" id="pt-detail"></div>
+              <div class="small text-muted mb-1">Cakupan wilayah cepat</div>
+              <div class="preset-row" id="pt-preset"></div>
+              <input class="form-control form-control-sm mb-2" id="pt-cari" placeholder="Cari kecamatan…" aria-label="Cari kecamatan">
+              <div class="kec-list" id="pt-list"></div>
+            </div>
+            <div class="card-x map-main p-0">
+              <div id="map" class="map map-full"></div>
+              <div class="map-toggle custom-control custom-switch">
+                <input type="checkbox" class="custom-control-input" id="pt-titik" checked>
+                <label class="custom-control-label" for="pt-titik">Titik gerai</label>
+              </div>
+              <div class="legend-box" id="pt-legend"></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xl-4 mb-4"><div class="card-x">
+              <div class="card-x-head"><h5>Dampak terbesar</h5><span class="sub">pengurangan bersih, t/th</span></div>
+              <div id="ch-top"></div>
+              <div class="small text-muted d-none" id="ch-top-kosong">Belum ada kecamatan yang menerapkan kebijakan.</div>
+            </div></div>
+            <div class="col-xl-8 mb-4"><div class="card-x">
+              <div class="card-x-head"><h5>Hasil per kecamatan</h5><button class="btn btn-sm btn-outline-primary" id="pt-csv"><i data-feather="download" style="width:14px;height:14px"></i> Unduh CSV</button></div>
+              <div class="table-responsive"><table class="table table-sm nowrap w-100" id="tb-kec"></table></div>
+            </div></div>
+          </div>
+          <div class="card-x mb-3" style="height:auto">
+            <div class="card-x-head"><h5>Gunakan data lokasi gerai sendiri</h5><span class="sub" id="pt-sumber">Saat ini: titik ilustrasi dari jumlah gerai asumsi</span></div>
+            <p class="small text-muted mb-2">Unggah CSV dengan kolom <b>lat</b> dan <b>lon</b> (opsional: <b>nama</b>). Kecamatan tiap gerai ditentukan otomatis
+              dari koordinat, lalu jumlah gerai per kecamatan dan total gerai ikut diperbarui. Berkas diproses di peramban ini saja.</p>
+            <div class="d-flex flex-wrap align-items-center" style="gap:8px">
+              <input type="file" accept=".csv,text/csv" class="form-control-file w-auto" id="pt-file" aria-label="Berkas CSV lokasi gerai">
+              <button class="btn btn-sm btn-primary" id="pt-terapkan" disabled>Terapkan data gerai</button>
+              <button class="btn btn-sm btn-outline-secondary d-none" id="pt-reset-gerai">Kembali ke data asumsi</button>
+            </div>
+          </div>
+          <p class="foot-note" id="pt-catatan"></p>
+        </section>
+
+        <!-- ===== PROYEKSI ===== -->
+        <section class="page" id="page-proyeksi">
+          <div class="card-x mb-4" style="height:auto">
+            <div class="form-row">
+              <div class="col-md-3 col-6 form-group mb-md-0"><label class="small text-muted mb-1" for="pr-mulai">Kebijakan mulai berlaku</label>
+                <select class="custom-select custom-select-sm" id="pr-mulai"><option>2026</option><option selected>2027</option><option>2028</option></select></div>
+              <div class="col-md-3 col-6 form-group mb-md-0"><label class="small text-muted mb-1" for="pr-n">Jumlah simulasi Monte Carlo</label>
+                <select class="custom-select custom-select-sm" id="pr-n"><option>500</option><option>1000</option><option selected>2000</option><option>5000</option></select></div>
+              <div class="col-md-6 form-group mb-0"><label class="small text-muted mb-1" for="pr-residu">Timbulan sampah residu Kab. Sumedang (ton/tahun)</label>
+                <input type="number" min="0" step="1000" class="form-control form-control-sm" id="pr-residu" placeholder="Isi dari data DLHK/SIPSN; kosongkan bila belum ada"></div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-4 mb-4"><div class="kpi kpi-pink">
+              <div class="kpi-label">Timbulan 2029 tanpa kebijakan</div>
+              <div class="kpi-value"><span id="pr-timbulan">–</span><small> ton/tahun</small></div>
+              <div class="kpi-sub" id="pr-gerai"></div>
+            </div></div>
+            <div class="col-lg-4 mb-4"><div class="kpi kpi-purple">
+              <div class="kpi-label">Pengurangan bersih 2029</div>
+              <div class="kpi-value"><span id="pr-bersih">–</span><small> ton/tahun</small></div>
+              <div class="kpi-sub" id="pr-bersih-sub"></div>
+            </div></div>
+            <div class="col-lg-4 mb-4"><div class="kpi kpi-green">
+              <div class="kpi-label" id="pr-kum-label">Kumulatif</div>
+              <div class="kpi-value"><span id="pr-kum">–</span><small> ton</small></div>
+              <div class="kpi-sub" id="pr-kum-sub"></div>
+            </div></div>
+          </div>
+          <div class="card-x mb-4" style="height:auto">
+            <div class="card-x-head"><h5>Timbulan kantong plastik: tanpa dan dengan kebijakan</h5><span class="sub" id="pr-ch-sub"></span></div>
+            <div id="ch-proyeksi"></div>
+          </div>
+          <div class="row">
+            <div class="col-12 mb-4"><div class="card-x">
+              <div class="card-x-head"><h5>Kontribusi terhadap target Masterplan</h5></div>
+              <div id="ch-target"></div>
+              <div class="info-box d-none" id="pr-target-kosong" style="height:auto">Isi <b>timbulan sampah residu Kabupaten Sumedang</b> di atas untuk melihat
+                porsi kebijakan ini terhadap target Masterplan (10% pada 2025 hingga 50% pada 2029).</div>
+              <p class="foot-note mb-0" id="pr-target-cat">Kebijakan kantong plastik hanyalah satu dari beberapa program menuju target. Grafik ini menunjukkan seberapa besar porsi yang bisa disumbangkannya.</p>
+            </div></div>
+            <div class="col-12 mb-4"><div class="card-x">
+              <div class="card-x-head"><h5>Tabel proyeksi</h5><button class="btn btn-sm btn-outline-primary" id="pr-csv"><i data-feather="download" style="width:14px;height:14px"></i> Unduh CSV</button></div>
+              <div class="table-responsive"><table class="table table-sm nowrap w-100" id="tb-proyeksi"></table></div>
+            </div></div>
+          </div>
+        </section>
+
+        <!-- ===== ASUMSI ===== -->
+        <section class="page" id="page-asumsi">
+          <p class="text-muted">Halaman ini dipakai untuk menelaah model bersama <b>SatuBumi</b> dan <b>Pemkab Sumedang</b>. Setiap parameter yang
+            masih berupa asumsi perlu diganti dengan data lapangan atau literatur, lalu sumbernya dicatat di kolom <i>Sumber</i>.</p>
+          <div class="card-x mb-4" style="height:auto">
+            <div class="card-x-head"><h5>Parameter model</h5><button class="btn btn-sm btn-outline-primary" id="as-csv"><i data-feather="download" style="width:14px;height:14px"></i> Unduh CSV</button></div>
+            <div class="table-responsive"><table class="table table-sm w-100 tbl-param" id="tb-param"></table></div>
+            <p class="foot-note mb-0">Nilai berwarna ungu sudah diubah dari nilai awal lewat panel Parameter.</p>
+          </div>
+          <div class="row">
+            <div class="col-xl-6 mb-4"><div class="card-x">
+              <div class="card-x-head"><h5>Rumus inti</h5></div>
+              <div class="small text-muted">Timbulan kantong per gerai per tahun (ton):</div>
+              <div class="rumus"><i>T</i> = transaksi <span class="op">×</span> kantong <span class="op">×</span> berat <span class="op">×</span> 365 <span class="op">/</span> 10<sup>6</sup></div>
+              <div class="small text-muted">Pengurangan kotor, dengan <i>k</i> = kepatuhan dan <i>f</i> = faktor skenario:</div>
+              <div class="rumus"><i>K</i> = <i>T</i> <span class="op">×</span> <i>k</i> <span class="op">×</span> <i>f</i></div>
+              <ul class="clean small mb-3">
+                <li>Larangan penuh: <i>f</i> = 1</li>
+                <li>Kantong berbayar: <i>f</i> = efek kantong berbayar</li>
+                <li>Bertahap: <i>f</i> = efek tahun pertama, lalu rata-ratanya dengan 1 pada tahun kedua, dan 1 mulai tahun ketiga</li>
+              </ul>
+              <div class="small text-muted">Pengurangan bersih setelah efek samping (<i>s</i> = kantong sampah pengganti, <i>m</i> = pindah ke warung/pasar):</div>
+              <div class="rumus"><i>B</i> = <i>K</i> <span class="op">−</span> <i>K</i><span class="op">×</span><i>s</i> <span class="op">−</span> <i>K</i><span class="op">×</span><i>m</i></div>
+              <div class="small text-muted">Proyeksi tahunan, jumlah gerai tumbuh dengan laju <i>g</i>:</div>
+              <div class="rumus">gerai(<i>t</i>) = gerai(2026) <span class="op">×</span> (1 + <i>g</i>)<sup><i>t</i> − 2026</sup></div>
+            </div></div>
+            <div class="col-xl-6 mb-4">
+              <div class="card-x mb-4" style="height:auto">
+                <div class="card-x-head"><h5>Metode</h5></div>
+                <ul class="clean">
+                  <li><b>Skenario</b>: membandingkan empat opsi kebijakan pada parameter yang sama.</li>
+                  <li><b>Spasial</b>: dihitung per kecamatan. Perpindahan belanja dari kecamatan yang menerapkan kebijakan dibagi rata ke tetangga yang belum menerapkan (<i>limpahan</i>).</li>
+                  <li><b>Proyeksi (stok-alir)</b>: dampak tahunan 2026–2029 dengan pertumbuhan gerai dan penerapan bertahap.</li>
+                  <li><b>Monte Carlo</b>: parameter diambil acak dari distribusi segitiga (minimum, nilai dipakai, maksimum) untuk memperoleh rentang P10–P90.</li>
+                </ul>
+              </div>
+              <div class="card-x" style="height:auto">
+                <div class="card-x-head"><h5>Masukan yang dibutuhkan</h5></div>
+                <ul class="clean">
+                  <li><b>Pemkab Sumedang</b>: jumlah dan lokasi minimarket/swalayan, timbulan dan komposisi sampah, data TPS3R, kebijakan yang direncanakan.</li>
+                  <li><b>SatuBumi</b>: berat kantong, pola pakai ulang kantong, nasib akhir kantong di lapangan, kewajaran angka kepatuhan dan perubahan perilaku.</li>
+                  <li><b>Pengelola ritel</b>: rata-rata transaksi dan kantong per transaksi.</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <p class="foot-note">Prototipe untuk Talkshow Jatinangor Smart City, Dies Natalis ke-68 FMIPA Unpad. Angka bukan hasil kajian final.
+            Batas kecamatan: data terbuka turunan GADM/cahyadsn, belum batas resmi. Peta dasar © OpenStreetMap contributors.</p>
+        </section>
+      </div>
+
+      <!-- ===== PANEL PARAMETER ===== -->
+      <aside class="param-panel" id="param-panel" aria-label="Parameter simulasi">
+        <div class="d-flex align-items-center mb-1">
+          <h6 class="mb-0">Parameter</h6>
+          <button class="btn btn-sm btn-link ml-auto p-0 mr-2" id="btn-ket">Tampilkan keterangan</button>
+          <button class="btn btn-sm btn-light param-close" id="btn-param-close" aria-label="Tutup panel">✕</button>
+        </div>
+        <div class="mt-3" id="prm-utama"></div>
+        <div class="grp"><i data-feather="alert-triangle" style="width:14px;height:14px"></i>Efek samping kebijakan</div>
+        <div id="prm-efek"></div>
+        <button class="btn btn-link btn-toggle-grp mb-2" id="btn-lanjut" aria-expanded="false">▸ Parameter skenario &amp; proyeksi</button>
+        <div id="prm-lanjut" class="d-none"></div>
+        <button class="btn btn-sm btn-outline-primary btn-block mt-2" id="btn-reset">Kembalikan nilai awal</button>
+        <p class="note mt-3 mb-0">Nilai awal adalah contoh untuk ilustrasi dan akan dikalibrasi dengan data Pemkab Sumedang serta masukan SatuBumi.</p>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/jquery.min.js"></script>
+<script src="vendor/bootstrap.bundle.min.js"></script>
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="vendor/apexcharts.min.js"></script>
+<script src="vendor/jquery.dataTables.min.js"></script>
+<script src="vendor/dataTables.bootstrap4.min.js"></script>
+<script src="vendor/feather.min.js"></script>
+<script src="js/data.js"></script>
+<script src="js/model.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
